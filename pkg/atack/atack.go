@@ -13,13 +13,40 @@ type Atack struct {
 	pass      string
 	maxLength int
 	chars     []rune
+	passN     []int
 }
 
 /*
 	NewAtack is a constructor for Atack type
 */
 func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
-	return &Atack{atack: atack, pass: pass, maxLength: maxLength, chars: chars}
+	a := &Atack{atack: atack, pass: pass, maxLength: maxLength, chars: chars}
+	a.passN = make([]int, maxLength)
+
+	return a
+}
+
+/*
+	NewAtack is a constructor for Atack type
+*/
+func (a *Atack) GenNextPass() string {
+	lc := len(a.chars) - 1
+	ln := len(a.passN) - 1
+
+	for i := 0; i < ln+1; i++ {
+
+		if a.passN[i] < lc {
+			a.passN[i]++
+			return a.buildString(a.passN)
+		} else {
+			if i < ln {
+				a.passN[i] = 0
+				a.passN[i+1]++
+				return a.buildString(a.passN)
+			}
+		}
+	}
+	return ""
 }
 
 /*
@@ -45,31 +72,20 @@ func (a *Atack) brute() (pass string, err error) {
 	for i := 0; i < N; i++ {
 		go a.brute_worker(chOut, chIn)
 	}
-	lc := len(a.chars) - 1
-	ln := a.maxLength - 1
 
-	passN := make([]int, a.maxLength)
-	var i int
 	for {
 		select {
 		case p := <-chIn:
 			close(chOut)
 			return p, nil
 		default:
-			s := a.buildString(passN)
+			s := a.GenNextPass()
+			//s := a.buildString(passN)
 			println("build=", s)
-			chOut <- s
-			if passN[i] < lc {
-				passN[i]++
-			} else {
-				if i < ln {
-					passN[i] = 0
-					passN[i+1]++
-				} else {
-					close(chOut)
-					return "", nil
-				}
-			}
+			//chOut <- s
+
+			//close(chOut)
+			//return "", nil
 		}
 	}
 }
