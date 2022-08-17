@@ -30,23 +30,28 @@ func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
 	NewAtack is a constructor for Atack type
 */
 func (a *Atack) GenNextPass() string {
+	var ans string
+	ans = a.buildString(a.passN)
+
 	lc := len(a.chars) - 1
 	ln := len(a.passN) - 1
 
-	for i := 0; i < ln+1; i++ {
+	var i int
+	for (a.passN[i] == lc) && (i < ln) {
+		i++
+	}
+	a.passN[i]++
 
-		if a.passN[i] < lc {
-			a.passN[i]++
-			return a.buildString(a.passN)
-		} else {
-			if i < ln {
-				a.passN[i] = 0
-				a.passN[i+1]++
-				return a.buildString(a.passN)
-			}
+	if (i == ln) && (a.passN[i] == lc) {
+		return ""
+	}
+
+	if a.passN[i] == 1 {
+		for j := i - 1; j >= 0; j-- {
+			a.passN[j] = 0
 		}
 	}
-	return ""
+	return ans
 }
 
 /*
