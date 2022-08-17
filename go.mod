@@ -1,4 +1,4 @@
-module github.com/xpoh/bzip
+module bzip
 
 go 1.18
 

@@ -62,7 +62,8 @@ func TestAtack_buildString(t *testing.T) {
 				maxLength: tt.fields.maxLength,
 				chars:     tt.fields.chars,
 			}
-			if got := a.buildString(tt.args.i); got != tt.want {
+			ans, _ := a.buildString(tt.args.i)
+			if got := ans; got != tt.want {
 				t.Errorf("buildString() = %v, want %v", got, tt.want)
 			}
 		})

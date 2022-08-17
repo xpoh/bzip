@@ -1,6 +1,7 @@
 package atack
 
 import (
+	"errors"
 	"runtime"
 )
 
@@ -31,7 +32,12 @@ func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
 */
 func (a *Atack) GenNextPass() string {
 	var ans string
-	ans = a.buildString(a.passN)
+	var err error
+	ans, err = a.buildString(a.passN)
+
+	if err != nil {
+		return "!!!"
+	}
 
 	lc := len(a.chars) - 1
 	ln := len(a.passN) - 1
@@ -40,12 +46,13 @@ func (a *Atack) GenNextPass() string {
 	for (a.passN[i] == lc) && (i < ln) {
 		i++
 	}
+
 	if a.passN[i] == 0 {
 		for j := i - 1; j >= 0; j-- {
 			a.passN[j] = 0
 		}
 	}
-	if a.passN[i] < lc {
+	if a.passN[i] <= lc {
 		a.passN[i]++
 	}
 
@@ -55,12 +62,16 @@ func (a *Atack) GenNextPass() string {
 /*
 	buildPass - build string pass from numbers
 */
-func (a *Atack) buildString(i []int) string {
+func (a *Atack) buildString(i []int) (string, error) {
 	s := ""
 	for j := 0; j < len(i); j++ {
-		s = s + string(a.chars[i[j]])
+		if i[j] < len(a.chars) {
+			s = s + string(a.chars[i[j]])
+		} else {
+			return "", errors.New("Overflow")
+		}
 	}
-	return s
+	return s, nil
 }
 
 /*
@@ -84,7 +95,7 @@ func (a *Atack) brute() (pass string, err error) {
 		default:
 			s := a.GenNextPass()
 			//s := a.buildString(passN)
-			if s != "" {
+			if s != "!!!" {
 				println("build=", s)
 			}
 			//chOut <- s
