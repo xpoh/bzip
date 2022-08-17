@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+
 	r, err := zip.OpenReader("encrypted.zip")
 	if err != nil {
 		log.Fatal(err)

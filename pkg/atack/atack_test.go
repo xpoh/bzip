@@ -100,14 +100,14 @@ func TestAtack_brute(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name: "Pass 123asd",
+			name: "Pass abc",
 			fields: fields{
 				atack:     ma,
-				pass:      "123asd",
-				maxLength: 6,
-				chars:     []rune{'a', 'b', 'c', 'a', 's', 'd', '1', '2', '3'},
+				pass:      "abc",
+				maxLength: 3,
+				chars:     []rune{'a', 'b', 'c'},
 			},
-			wantPass: "123asd",
+			wantPass: "abc",
 			wantErr:  false,
 		},
 	}

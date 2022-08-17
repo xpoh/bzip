@@ -40,22 +40,20 @@ func (a *Atack) GenNextPass() string {
 	for (a.passN[i] == lc) && (i < ln) {
 		i++
 	}
-	a.passN[i]++
-
-	if (i == ln) && (a.passN[i] == lc) {
-		return ""
-	}
-
-	if a.passN[i] == 1 {
+	if a.passN[i] == 0 {
 		for j := i - 1; j >= 0; j-- {
 			a.passN[j] = 0
 		}
 	}
+	if a.passN[i] < lc {
+		a.passN[i]++
+	}
+
 	return ans
 }
 
 /*
-	buildPass - build strin pass from numbers
+	buildPass - build string pass from numbers
 */
 func (a *Atack) buildString(i []int) string {
 	s := ""
@@ -86,7 +84,9 @@ func (a *Atack) brute() (pass string, err error) {
 		default:
 			s := a.GenNextPass()
 			//s := a.buildString(passN)
-			println("build=", s)
+			if s != "" {
+				println("build=", s)
+			}
 			//chOut <- s
 
 			//close(chOut)
