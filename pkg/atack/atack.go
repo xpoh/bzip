@@ -3,6 +3,7 @@ package atack
 import (
 	"errors"
 	"runtime"
+	"sync"
 )
 
 type Atacker interface {
@@ -30,13 +31,13 @@ func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
 /*
 	NewAtack is a constructor for Atack type
 */
-func (a *Atack) GenNextPass() string {
+func (a *Atack) GenNextPass() (string, error) {
 	var ans string
 	var err error
 	ans, err = a.buildString(a.passN)
 
 	if err != nil {
-		return "!!!"
+		return "", err
 	}
 
 	lc := len(a.chars) - 1
@@ -56,7 +57,7 @@ func (a *Atack) GenNextPass() string {
 		a.passN[i]++
 	}
 
-	return ans
+	return ans, nil
 }
 
 /*
@@ -68,7 +69,7 @@ func (a *Atack) buildString(i []int) (string, error) {
 		if i[j] < len(a.chars) {
 			s = s + string(a.chars[i[j]])
 		} else {
-			return "", errors.New("Overflow")
+			return "", errors.New("overflow")
 		}
 	}
 	return s, nil
@@ -83,34 +84,39 @@ func (a *Atack) brute() (pass string, err error) {
 	chOut := make(chan string, N)
 	chIn := make(chan string)
 
+	wg := sync.WaitGroup{}
+
 	for i := 0; i < N; i++ {
-		go a.brute_worker(chOut, chIn)
+		go a.brute_worker(&wg, chOut, chIn)
+		wg.Add(1)
 	}
 
+	var p string
 	for {
 		select {
-		case p := <-chIn:
+		case p = <-chIn:
 			close(chOut)
 			return p, nil
 		default:
-			s := a.GenNextPass()
-			//s := a.buildString(passN)
-			if s != "!!!" {
+			s, err := a.GenNextPass()
+			if err != nil {
 				println("build=", s)
-			}
-			//chOut <- s
+				chOut <- s
+			} else {
+				close(chOut)
+				wg.Wait()
 
-			//close(chOut)
-			//return "", nil
+				return p, err
+			}
 		}
 	}
 }
 
-func (a *Atack) brute_worker(ch_in chan string, ch_out chan string) {
+func (a *Atack) brute_worker(wg *sync.WaitGroup, ch_in chan string, ch_out chan string) {
 	for s := range ch_in {
-		//fmt.Println(s)
 		if a.atack.check(s) {
 			ch_out <- s
 		}
 	}
+	wg.Done()
 }

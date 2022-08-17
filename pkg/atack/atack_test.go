@@ -87,7 +87,7 @@ func (m *mockAtacker) setSecret(pass string) {
 }
 
 func TestAtack_brute(t *testing.T) {
-	ma := newMockAtacker("123asd")
+	ma := newMockAtacker("abc")
 	type fields struct {
 		atack     Atacker
 		pass      string
