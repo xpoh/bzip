@@ -100,16 +100,19 @@ func (a *Atack) brute() (pass string, err error) {
 		default:
 			s, err := a.GenNextPass()
 			if err != nil {
+				close(chOut)
+				break
+			} else {
 				println("build=", s)
 				chOut <- s
-			} else {
-				close(chOut)
-				wg.Wait()
-
-				return p, err
 			}
 		}
 	}
+	wg.Wait()
+	for v := range chIn {
+		return v, nil
+	}
+	return "", nil
 }
 
 func (a *Atack) brute_worker(wg *sync.WaitGroup, ch_in chan string, ch_out chan string) {
