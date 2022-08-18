@@ -101,18 +101,18 @@ func (a *Atack) brute() (pass string, err error) {
 			s, err := a.GenNextPass()
 			if err != nil {
 				close(chOut)
-				break
+				wg.Wait()
+				close(chIn)
+				for p = range chIn {
+				}
+				return p, nil
+
 			} else {
 				println("build=", s)
 				chOut <- s
 			}
 		}
 	}
-	wg.Wait()
-	for v := range chIn {
-		return v, nil
-	}
-	return "", nil
 }
 
 func (a *Atack) brute_worker(wg *sync.WaitGroup, ch_in chan string, ch_out chan string) {
