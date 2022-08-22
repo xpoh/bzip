@@ -89,7 +89,7 @@ func (a *Atack) brute() (pass string, err error) {
 	wg := sync.WaitGroup{}
 
 	for i := 0; i < N; i++ {
-		go a.brute_worker(&wg, chOut, chIn)
+		go a.bruteWorker(&wg, chOut, chIn)
 		wg.Add(1)
 	}
 
@@ -108,7 +108,6 @@ func (a *Atack) brute() (pass string, err error) {
 				for p = range chIn {
 				}
 				return p, nil
-
 			} else {
 				s, _ := a.buildString(a.passN)
 				chOut <- s
@@ -117,10 +116,10 @@ func (a *Atack) brute() (pass string, err error) {
 	}
 }
 
-func (a *Atack) brute_worker(wg *sync.WaitGroup, ch_in chan string, ch_out chan string) {
-	for s := range ch_in {
+func (a *Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
+	for s := range chIn {
 		if a.atack.check(s) {
-			ch_out <- s
+			chOut <- s
 		}
 	}
 	wg.Done()
