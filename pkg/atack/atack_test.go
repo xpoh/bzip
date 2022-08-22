@@ -7,6 +7,7 @@ func TestAtack_buildString(t *testing.T) {
 		atack     Atacker
 		pass      string
 		maxLength int
+		lenght    int
 		chars     []rune
 	}
 
@@ -27,6 +28,7 @@ func TestAtack_buildString(t *testing.T) {
 				atack:     nil,
 				pass:      "",
 				maxLength: 3,
+				lenght:    3,
 				chars:     chars,
 			},
 			args: args{[]int{0, 0, 0}},
@@ -38,6 +40,7 @@ func TestAtack_buildString(t *testing.T) {
 				atack:     nil,
 				pass:      "",
 				maxLength: 3,
+				lenght:    3,
 				chars:     chars,
 			},
 			args: args{[]int{0, 1, 2}},
@@ -48,6 +51,7 @@ func TestAtack_buildString(t *testing.T) {
 				atack:     nil,
 				pass:      "",
 				maxLength: 9,
+				lenght:    9,
 				chars:     chars,
 			},
 			args: args{[]int{0, 1, 2, 0, 1, 2, 0, 1, 2}},
@@ -60,6 +64,7 @@ func TestAtack_buildString(t *testing.T) {
 				atack:     tt.fields.atack,
 				pass:      tt.fields.pass,
 				maxLength: tt.fields.maxLength,
+				lenght:    tt.fields.lenght,
 				chars:     tt.fields.chars,
 			}
 			ans, _ := a.buildString(tt.args.i)
@@ -87,7 +92,12 @@ func (m *mockAtacker) setSecret(pass string) {
 }
 
 func TestAtack_brute(t *testing.T) {
+
 	ma := newMockAtacker("abc")
+	mb := newMockAtacker("aaa")
+	mc := newMockAtacker("ccc")
+	me := newMockAtacker("ccc")
+
 	type fields struct {
 		atack     Atacker
 		pass      string
@@ -109,6 +119,39 @@ func TestAtack_brute(t *testing.T) {
 				chars:     []rune{'a', 'b', 'c'},
 			},
 			wantPass: "abc",
+			wantErr:  false,
+		},
+		{
+			name: "Pass aaa",
+			fields: fields{
+				atack:     mb,
+				pass:      "aaa",
+				maxLength: 3,
+				chars:     []rune{'a', 'b', 'c'},
+			},
+			wantPass: "aaa",
+			wantErr:  false,
+		},
+		{
+			name: "Pass ccc",
+			fields: fields{
+				atack:     mc,
+				pass:      "ccc",
+				maxLength: 3,
+				chars:     []rune{'a', 'b', 'c'},
+			},
+			wantPass: "ccc",
+			wantErr:  false,
+		},
+		{
+			name: "Pass ccc in 4 chars pass",
+			fields: fields{
+				atack:     me,
+				pass:      "ccc",
+				maxLength: 4,
+				chars:     []rune{'c', 'c', 'c'},
+			},
+			wantPass: "ccc",
 			wantErr:  false,
 		},
 	}

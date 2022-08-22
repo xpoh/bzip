@@ -14,6 +14,7 @@ type Atack struct {
 	atack     Atacker
 	pass      string
 	maxLength int
+	lenght    int
 	chars     []rune
 	passN     []int
 }
@@ -24,6 +25,7 @@ type Atack struct {
 func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
 	a := &Atack{atack: atack, pass: pass, maxLength: maxLength, chars: chars}
 	a.passN = make([]int, maxLength)
+	a.lenght = 1
 
 	return a
 }
@@ -31,33 +33,32 @@ func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
 /*
 	NewAtack is a constructor for Atack type
 */
-func (a *Atack) GenNextPass() (string, error) {
-	var ans string
-	var err error
-	ans, err = a.buildString(a.passN)
-
-	if err != nil {
-		return "", err
-	}
+func (a *Atack) GenNextPass(idx int) error {
 
 	lc := len(a.chars) - 1
-	ln := len(a.passN) - 1
+	ln := a.lenght - 1
 
-	var i int
-	for (a.passN[i] == lc) && (i < ln) {
-		i++
-	}
+	a.passN[idx]++
 
-	if a.passN[i] == 0 {
-		for j := i - 1; j >= 0; j-- {
-			a.passN[j] = 0
+	if a.passN[idx] > lc {
+		if idx == ln {
+			if a.lenght < a.maxLength {
+				a.lenght++
+				a.passN[idx] = 0
+				a.passN[idx+1] = 0
+			} else {
+				return errors.New("Overflow")
+			}
+		} else {
+			a.passN[idx] = 0
+			err := a.GenNextPass(idx + 1)
+			if err != nil {
+				return err
+			}
 		}
 	}
-	if a.passN[i] <= lc {
-		a.passN[i]++
-	}
 
-	return ans, nil
+	return nil
 }
 
 /*
@@ -65,13 +66,14 @@ func (a *Atack) GenNextPass() (string, error) {
 */
 func (a *Atack) buildString(i []int) (string, error) {
 	s := ""
-	for j := 0; j < len(i); j++ {
+	for j := 0; j < a.lenght; j++ {
 		if i[j] < len(a.chars) {
 			s = s + string(a.chars[i[j]])
 		} else {
-			return "", errors.New("overflow")
+			return "", errors.New("Overflow")
 		}
 	}
+
 	return s, nil
 }
 
@@ -98,7 +100,7 @@ func (a *Atack) brute() (pass string, err error) {
 			close(chOut)
 			return p, nil
 		default:
-			s, err := a.GenNextPass()
+			err := a.GenNextPass(0)
 			if err != nil {
 				close(chOut)
 				wg.Wait()
@@ -108,7 +110,7 @@ func (a *Atack) brute() (pass string, err error) {
 				return p, nil
 
 			} else {
-				println("build=", s)
+				s, _ := a.buildString(a.passN)
 				chOut <- s
 			}
 		}
