@@ -3,14 +3,16 @@ package atack
 import (
 	"bytes"
 	zzz "github.com/yeka/zip"
-	"log"
 	"os"
+	"sync"
 )
 
 type zipArchive struct {
 	fileName string
 	content  []byte
 	size     int64
+	r        *zzz.Reader
+	mx       *sync.Mutex
 }
 
 func NewZipArchive(fileName string) *zipArchive {
@@ -23,23 +25,29 @@ func NewZipArchive(fileName string) *zipArchive {
 		return nil
 	}
 	z.size = int64(len(z.content))
+	z.mx = &sync.Mutex{}
 	return z
+}
+func (a *zipArchive) prepare() error {
+	r, err := zzz.NewReader(bytes.NewReader(a.content), a.size)
+	a.r = r
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *zipArchive) check(pass string) bool {
-	r, err := zzz.NewReader(bytes.NewReader(a.content), a.size)
-	if err != nil {
-		return false
-	}
+	a.mx.Lock()
+	defer a.mx.Unlock()
 
+	r := a.r
 	for _, f := range r.File {
 		if f.IsEncrypted() {
 			f.SetPassword(pass)
 		}
-
 		r, err := f.Open()
 		if err != nil {
-			log.Println(err)
 			return false
 		} else {
 			r.Close()

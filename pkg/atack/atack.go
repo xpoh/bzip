@@ -1,29 +1,34 @@
 package atack
 
 import (
+	"context"
 	"errors"
+	"log"
 	"runtime"
 	"sync"
+	"time"
 )
 
 type Atacker interface {
+	prepare() error
 	check(pass string) bool
 }
 
 type Atack struct {
 	atack     Atacker
-	pass      string
 	maxLength int
 	lenght    int
 	chars     []rune
 	passN     []int
+	pass      string
+	count     int64
 }
 
 /*
 	NewAtack is a constructor for Atack type
 */
-func NewAtack(atack Atacker, pass string, maxLength int, chars []rune) *Atack {
-	a := &Atack{atack: atack, pass: pass, maxLength: maxLength, chars: chars}
+func NewAtack(atack Atacker, maxLength int, chars []rune) *Atack {
+	a := &Atack{atack: atack, maxLength: maxLength, chars: chars}
 	a.passN = make([]int, maxLength)
 	a.lenght = 1
 
@@ -73,7 +78,8 @@ func (a *Atack) buildString(i []int) (string, error) {
 			return "", errors.New("Overflow")
 		}
 	}
-
+	a.pass = s
+	a.count++
 	return s, nil
 }
 
@@ -87,17 +93,22 @@ func (a *Atack) brute() (pass string, err error) {
 	chIn := make(chan string)
 
 	wg := sync.WaitGroup{}
+	ctx := context.Background()
+	defer ctx.Done()
 
 	for i := 0; i < N; i++ {
 		go a.bruteWorker(&wg, chOut, chIn)
 		wg.Add(1)
 	}
 
+	go a.startStatusLogger(ctx)
+
 	var p string
 	for {
 		select {
 		case p = <-chIn:
 			close(chOut)
+			close(chIn)
 			return p, nil
 		default:
 			err := a.GenNextPass(0)
@@ -116,11 +127,31 @@ func (a *Atack) brute() (pass string, err error) {
 	}
 }
 
-func (a *Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
+func (a Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
+
+	err := a.atack.prepare()
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	for s := range chIn {
 		if a.atack.check(s) {
 			chOut <- s
 		}
 	}
 	wg.Done()
+}
+
+func (a *Atack) startStatusLogger(ctx context.Context) {
+	var t int
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			time.Sleep(time.Second)
+			log.Println("Current pass", a.pass, "Speed ", float32(a.count)/float32(t), "op/sec", "Total ", a.count)
+			t++
+		}
+	}
 }

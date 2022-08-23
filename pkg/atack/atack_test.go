@@ -62,7 +62,6 @@ func TestAtack_buildString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &Atack{
 				atack:     tt.fields.atack,
-				pass:      tt.fields.pass,
 				maxLength: tt.fields.maxLength,
 				lenght:    tt.fields.lenght,
 				chars:     tt.fields.chars,
@@ -82,6 +81,9 @@ type mockAtacker struct {
 func newMockAtacker(secret string) *mockAtacker {
 	return &mockAtacker{secret: secret}
 }
+func (m *mockAtacker) prepare() error {
+	return nil
+}
 
 func (m *mockAtacker) check(pass string) bool {
 	return m.secret == pass
@@ -100,7 +102,6 @@ func TestAtack_brute(t *testing.T) {
 
 	type fields struct {
 		atack     Atacker
-		pass      string
 		maxLength int
 		chars     []rune
 	}
@@ -114,7 +115,6 @@ func TestAtack_brute(t *testing.T) {
 			name: "Pass abc",
 			fields: fields{
 				atack:     ma,
-				pass:      "abc",
 				maxLength: 3,
 				chars:     []rune{'a', 'b', 'c'},
 			},
@@ -125,7 +125,6 @@ func TestAtack_brute(t *testing.T) {
 			name: "Pass aaa",
 			fields: fields{
 				atack:     mb,
-				pass:      "aaa",
 				maxLength: 3,
 				chars:     []rune{'a', 'b', 'c'},
 			},
@@ -136,7 +135,6 @@ func TestAtack_brute(t *testing.T) {
 			name: "Pass ccc",
 			fields: fields{
 				atack:     mc,
-				pass:      "ccc",
 				maxLength: 3,
 				chars:     []rune{'a', 'b', 'c'},
 			},
@@ -147,7 +145,6 @@ func TestAtack_brute(t *testing.T) {
 			name: "Pass ccc in 4 chars pass",
 			fields: fields{
 				atack:     me,
-				pass:      "ccc",
 				maxLength: 4,
 				chars:     []rune{'c', 'c', 'c'},
 			},
@@ -158,9 +155,48 @@ func TestAtack_brute(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewAtack(tt.fields.atack,
-				tt.fields.pass,
 				tt.fields.maxLength,
 				tt.fields.chars)
+
+			gotPass, err := a.brute()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("brute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotPass != tt.wantPass {
+				t.Errorf("brute() gotPass = %v, want %v", gotPass, tt.wantPass)
+			}
+		})
+	}
+}
+
+func TestAtack_brute_zip(t *testing.T) {
+
+	createTestArchive("./test.zip", "123456")
+
+	tests := []struct {
+		name      string
+		path      string
+		wantPass  string
+		wantErr   bool
+		maxLength int
+		chars     []rune
+	}{
+		{
+			name:      "Pass = 123456",
+			path:      "./test.zip",
+			wantPass:  "123456",
+			wantErr:   false,
+			maxLength: 6,
+			chars:     []rune("0123456789abcd"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := NewZipArchive(tt.path)
+			a := NewAtack(b,
+				tt.maxLength,
+				tt.chars)
 
 			gotPass, err := a.brute()
 			if (err != nil) != tt.wantErr {
