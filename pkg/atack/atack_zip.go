@@ -2,6 +2,7 @@ package atack
 
 import (
 	"bytes"
+	"fmt"
 	zzz "github.com/yeka/zip"
 	"os"
 	"sync"
@@ -50,6 +51,7 @@ func (a *zipArchive) check(pass string) bool {
 		if err != nil {
 			return false
 		} else {
+			fmt.Println(r)
 			r.Close()
 			return true
 		}
