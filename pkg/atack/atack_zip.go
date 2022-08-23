@@ -7,15 +7,15 @@ import (
 	"os"
 )
 
-type azip struct {
+type zipArchive struct {
 	fileName string
 	content  []byte
 	size     int64
 }
 
-func New(fileName string) *azip {
+func NewZipArchive(fileName string) *zipArchive {
 	var err error
-	z := &azip{fileName: fileName}
+	z := &zipArchive{fileName: fileName}
 
 	z.content, err = os.ReadFile(fileName)
 	if err != nil {
@@ -26,7 +26,7 @@ func New(fileName string) *azip {
 	return z
 }
 
-func (a *azip) check(pass string) bool {
+func (a *zipArchive) check(pass string) bool {
 	r, err := zzz.NewReader(bytes.NewReader(a.content), a.size)
 	if err != nil {
 		return false

@@ -1,0 +1,61 @@
+package atack
+
+import (
+	"bytes"
+	"github.com/yeka/zip"
+	"io"
+	"log"
+	"os"
+	"testing"
+)
+
+func createTestArchive(fileName string, pass string) {
+	contents := []byte("Hello World")
+	fzip, err := os.Create(fileName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	zipw := zip.NewWriter(fzip)
+	defer zipw.Close()
+	w, err := zipw.Encrypt(`test.txt`, pass, zip.AES256Encryption)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = io.Copy(w, bytes.NewReader(contents))
+	if err != nil {
+		log.Fatal(err)
+	}
+	zipw.Flush()
+}
+
+func Test_azip_check(t *testing.T) {
+	createTestArchive("./test.zip", "test123")
+
+	tests := []struct {
+		name string
+		path string
+		pass string
+		want bool
+	}{
+		{
+			name: "Pass correct",
+			path: "./test.zip",
+			pass: "test123",
+			want: true,
+		},
+		{
+			name: "Pass uncorrect",
+			path: "./test.zip",
+			pass: "test321",
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a := NewZipArchive(tt.path)
+			if got := a.check(tt.pass); got != tt.want {
+				t.Errorf("check() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
