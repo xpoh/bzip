@@ -84,9 +84,9 @@ func (a *Atack) buildString(i []int) (string, error) {
 }
 
 /*
-	brute pass
+	Brute pass
 */
-func (a *Atack) brute() (pass string, err error) {
+func (a *Atack) Brute() (pass string, err error) {
 	N := runtime.NumCPU()
 
 	chOut := make(chan string, N)
@@ -108,7 +108,6 @@ func (a *Atack) brute() (pass string, err error) {
 		select {
 		case p = <-chIn:
 			close(chOut)
-			close(chIn)
 			return p, nil
 		default:
 			err := a.GenNextPass(0)
@@ -128,18 +127,18 @@ func (a *Atack) brute() (pass string, err error) {
 }
 
 func (a Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
+	defer wg.Done()
 
 	err := a.atack.prepare()
 	if err != nil {
 		log.Println(err)
-		return
+		panic(err)
 	}
 	for s := range chIn {
 		if a.atack.check(s) {
 			chOut <- s
 		}
 	}
-	wg.Done()
 }
 
 func (a *Atack) startStatusLogger(ctx context.Context) {

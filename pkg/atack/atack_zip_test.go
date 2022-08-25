@@ -53,6 +53,10 @@ func Test_azip_check(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewZipArchive(tt.path)
+			err := a.prepare()
+			if err != nil {
+				t.Errorf("Prepare not nil %v", err)
+			}
 			if got := a.check(tt.pass); got != tt.want {
 				t.Errorf("check() = %v, want %v", got, tt.want)
 			}
@@ -62,7 +66,7 @@ func Test_azip_check(t *testing.T) {
 
 func TestAtack_brute_zip(t *testing.T) {
 
-	createTestArchive("./test.zip", "123456")
+	createTestArchive("./test.zip", "12345")
 
 	tests := []struct {
 		name      string
@@ -73,12 +77,12 @@ func TestAtack_brute_zip(t *testing.T) {
 		chars     []rune
 	}{
 		{
-			name:      "Pass = 123456",
+			name:      "Pass = 12345",
 			path:      "./test.zip",
-			wantPass:  "123456",
+			wantPass:  "12345",
 			wantErr:   false,
 			maxLength: 6,
-			chars:     []rune("0123456789abcd"),
+			chars:     []rune("0123456789"),
 		},
 	}
 	for _, tt := range tests {
@@ -88,7 +92,7 @@ func TestAtack_brute_zip(t *testing.T) {
 				tt.maxLength,
 				tt.chars)
 
-			gotPass, err := a.brute()
+			gotPass, err := a.Brute()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("brute() error = %v, wantErr %v", err, tt.wantErr)
 				return

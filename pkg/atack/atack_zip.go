@@ -2,8 +2,8 @@ package atack
 
 import (
 	"bytes"
-	"fmt"
 	zzz "github.com/yeka/zip"
+	"log"
 	"os"
 	"sync"
 )
@@ -39,8 +39,9 @@ func (a *zipArchive) prepare() error {
 }
 
 func (a *zipArchive) check(pass string) bool {
-	a.mx.Lock()
-	defer a.mx.Unlock()
+	//a.mx.Lock()
+	//defer a.mx.Unlock()
+	var tmp []byte
 
 	r := a.r
 	for _, f := range r.File {
@@ -51,9 +52,14 @@ func (a *zipArchive) check(pass string) bool {
 		if err != nil {
 			return false
 		} else {
-			fmt.Println(r)
-			r.Close()
-			return true
+			N, err := r.Read(tmp)
+			if err != nil {
+				return false
+			} else {
+				log.Println(N, tmp)
+				r.Close()
+				return true
+			}
 		}
 	}
 	return false

@@ -158,7 +158,7 @@ func TestAtack_brute(t *testing.T) {
 				tt.fields.maxLength,
 				tt.fields.chars)
 
-			gotPass, err := a.brute()
+			gotPass, err := a.Brute()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("brute() error = %v, wantErr %v", err, tt.wantErr)
 				return
