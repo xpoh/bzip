@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bzip/pkg/atack"
 	"flag"
 	"fmt"
+	"github.com/xpoh/bzip/pkg/atack"
 )
 
 func main() {
