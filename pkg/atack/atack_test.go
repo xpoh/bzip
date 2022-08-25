@@ -1,6 +1,8 @@
 package atack
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestAtack_buildString(t *testing.T) {
 	type fields struct {
@@ -98,7 +100,7 @@ func TestAtack_brute(t *testing.T) {
 	ma := newMockAtacker("abc")
 	mb := newMockAtacker("aaa")
 	mc := newMockAtacker("ccc")
-	me := newMockAtacker("ccc")
+	me := newMockAtacker("cccc")
 
 	type fields struct {
 		atack     Atacker
@@ -146,9 +148,9 @@ func TestAtack_brute(t *testing.T) {
 			fields: fields{
 				atack:     me,
 				maxLength: 4,
-				chars:     []rune{'c', 'c', 'c'},
+				chars:     []rune{'b', 'c', 'a'},
 			},
-			wantPass: "ccc",
+			wantPass: "cccc",
 			wantErr:  false,
 		},
 	}

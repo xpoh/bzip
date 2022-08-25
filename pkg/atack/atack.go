@@ -90,7 +90,7 @@ func (a *Atack) Brute() (pass string, err error) {
 	N := runtime.NumCPU()
 
 	chOut := make(chan string, N)
-	chIn := make(chan string)
+	chIn := make(chan string, 1)
 
 	wg := sync.WaitGroup{}
 	ctx := context.Background()
