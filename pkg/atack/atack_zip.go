@@ -49,6 +49,7 @@ func (a *zipArchive) check(pass string) bool {
 			f.SetPassword(pass)
 		}
 		r, err := f.Open()
+
 		if err != nil {
 			return false
 		} else {
@@ -57,7 +58,10 @@ func (a *zipArchive) check(pass string) bool {
 				return false
 			} else {
 				log.Println(N, tmp)
-				r.Close()
+				err := r.Close()
+				if err != nil {
+					return false
+				}
 				return true
 			}
 		}

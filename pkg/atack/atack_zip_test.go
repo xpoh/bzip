@@ -16,7 +16,12 @@ func createTestArchive(fileName string, pass string) {
 		log.Fatalln(err)
 	}
 	zipw := zip.NewWriter(fzip)
-	defer zipw.Close()
+	defer func(zipw *zip.Writer) {
+		err := zipw.Close()
+		if err != nil {
+
+		}
+	}(zipw)
 	w, err := zipw.Encrypt(`test.txt`, pass, zip.AES256Encryption)
 	if err != nil {
 		log.Fatal(err)
@@ -25,7 +30,25 @@ func createTestArchive(fileName string, pass string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	zipw.Flush()
+	err = zipw.Flush()
+	if err != nil {
+		return
+	}
+}
+
+func Benchmark_azip_check(t *testing.B) {
+	t.StopTimer()
+	path := "./test.zip"
+	createTestArchive(path, "test123")
+	a := NewZipArchive(path)
+	err := a.prepare()
+	if err != nil {
+		t.Errorf("Prepare not nil %v", err)
+	}
+	t.StartTimer()
+	for n := 0; n < t.N; n++ {
+		a.check("12345")
+	}
 }
 
 func Test_azip_check(t *testing.T) {
