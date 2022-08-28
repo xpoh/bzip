@@ -83,9 +83,6 @@ type mockAtacker struct {
 func newMockAtacker(secret string) *mockAtacker {
 	return &mockAtacker{secret: secret}
 }
-func (m *mockAtacker) prepare() error {
-	return nil
-}
 
 func (m *mockAtacker) check(pass string) bool {
 	return m.secret == pass

@@ -16,7 +16,12 @@ func createTestArchive(fileName string, pass string) {
 		log.Fatalln(err)
 	}
 	zipw := zip.NewWriter(fzip)
-	defer zipw.Close()
+	defer func(zipw *zip.Writer) {
+		err := zipw.Close()
+		if err != nil {
+
+		}
+	}(zipw)
 	w, err := zipw.Encrypt(`test.txt`, pass, zip.AES256Encryption)
 	if err != nil {
 		log.Fatal(err)
@@ -25,7 +30,21 @@ func createTestArchive(fileName string, pass string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	zipw.Flush()
+	err = zipw.Flush()
+	if err != nil {
+		return
+	}
+}
+
+func Benchmark_azip_check(t *testing.B) {
+	t.StopTimer()
+	path := "./test.zip"
+	createTestArchive(path, "test123")
+	a := NewZipArchive(path)
+	t.StartTimer()
+	for n := 0; n < t.N; n++ {
+		a.check("12345")
+	}
 }
 
 func Test_azip_check(t *testing.T) {
@@ -53,10 +72,6 @@ func Test_azip_check(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := NewZipArchive(tt.path)
-			err := a.prepare()
-			if err != nil {
-				t.Errorf("Prepare not nil %v", err)
-			}
 			if got := a.check(tt.pass); got != tt.want {
 				t.Errorf("check() = %v, want %v", got, tt.want)
 			}
@@ -66,7 +81,7 @@ func Test_azip_check(t *testing.T) {
 
 func TestAtack_brute_zip(t *testing.T) {
 
-	createTestArchive("./test.zip", "12345")
+	createTestArchive("./test.zip", "1234")
 
 	tests := []struct {
 		name      string
@@ -77,11 +92,11 @@ func TestAtack_brute_zip(t *testing.T) {
 		chars     []rune
 	}{
 		{
-			name:      "Pass = 12345",
+			name:      "Pass = 1234",
 			path:      "./test.zip",
-			wantPass:  "12345",
+			wantPass:  "1234",
 			wantErr:   false,
-			maxLength: 6,
+			maxLength: 4,
 			chars:     []rune("0123456789"),
 		},
 	}

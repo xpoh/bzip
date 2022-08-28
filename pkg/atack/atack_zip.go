@@ -2,8 +2,9 @@ package atack
 
 import (
 	"bytes"
+	"fmt"
 	zzz "github.com/yeka/zip"
-	"log"
+	"io"
 	"os"
 	"sync"
 )
@@ -29,38 +30,24 @@ func NewZipArchive(fileName string) *zipArchive {
 	z.mx = &sync.Mutex{}
 	return z
 }
-func (a *zipArchive) prepare() error {
-	r, err := zzz.NewReader(bytes.NewReader(a.content), a.size)
-	a.r = r
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func (a *zipArchive) check(pass string) bool {
-	//a.mx.Lock()
-	//defer a.mx.Unlock()
-	var tmp []byte
+	r, _ := zzz.NewReader(bytes.NewReader(a.content), a.size)
 
-	r := a.r
 	for _, f := range r.File {
 		if f.IsEncrypted() {
 			f.SetPassword(pass)
 		}
-		r, err := f.Open()
+		r1, err1 := f.Open()
+		if err1 != nil {
+			return false
+		}
+		defer r1.Close()
+		buf, err := io.ReadAll(r1)
 		if err != nil {
 			return false
-		} else {
-			N, err := r.Read(tmp)
-			if err != nil {
-				return false
-			} else {
-				log.Println(N, tmp)
-				r.Close()
-				return true
-			}
 		}
+		fmt.Printf("Size of %v: %v byte(s)\n", f.Name, len(buf))
 	}
-	return false
+	return true
 }

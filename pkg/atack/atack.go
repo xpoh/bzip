@@ -10,7 +10,6 @@ import (
 )
 
 type Atacker interface {
-	prepare() error
 	check(pass string) bool
 }
 
@@ -25,7 +24,7 @@ type Atack struct {
 }
 
 /*
-	NewAtack is a constructor for Atack type
+NewAtack is a constructor for Atack type
 */
 func NewAtack(atack Atacker, maxLength int, chars []rune) *Atack {
 	a := &Atack{atack: atack, maxLength: maxLength, chars: chars}
@@ -36,7 +35,7 @@ func NewAtack(atack Atacker, maxLength int, chars []rune) *Atack {
 }
 
 /*
-	NewAtack is a constructor for Atack type
+NewAtack is a constructor for Atack type
 */
 func (a *Atack) GenNextPass(idx int) error {
 
@@ -67,7 +66,7 @@ func (a *Atack) GenNextPass(idx int) error {
 }
 
 /*
-	buildPass - build string pass from numbers
+buildPass - build string pass from numbers
 */
 func (a *Atack) buildString(i []int) (string, error) {
 	s := ""
@@ -84,10 +83,11 @@ func (a *Atack) buildString(i []int) (string, error) {
 }
 
 /*
-	Brute pass
+Brute pass
 */
 func (a *Atack) Brute() (pass string, err error) {
 	N := runtime.NumCPU()
+	log.Printf("Use %v CPU\n", N)
 
 	chOut := make(chan string, N)
 	chIn := make(chan string, 1)
@@ -126,14 +126,9 @@ func (a *Atack) Brute() (pass string, err error) {
 	}
 }
 
-func (a Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
+func (a *Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan string) {
 	defer wg.Done()
 
-	err := a.atack.prepare()
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
 	for s := range chIn {
 		if a.atack.check(s) {
 			chOut <- s
@@ -143,14 +138,17 @@ func (a Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan stri
 
 func (a *Atack) startStatusLogger(ctx context.Context) {
 	var t int
+	totalTime := 0 * time.Second
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			time.Sleep(time.Second)
-			log.Println("Current pass", a.pass, "Speed ", float32(a.count)/float32(t), "op/sec", "Total ", a.count)
+			log.Printf("Current pass %v, Speed %v op/sec, TotalCount %v, time %v", a.pass, a.count, a.count, totalTime)
+			a.count = 0
 			t++
+			totalTime = totalTime + 1*time.Second
 		}
 	}
 }
