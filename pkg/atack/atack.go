@@ -6,6 +6,7 @@ import (
 	"log"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -77,8 +78,6 @@ func (a *Atack) buildString(i []int) (string, error) {
 			return "", errors.New("Overflow")
 		}
 	}
-	a.pass = s
-	a.count++
 	return s, nil
 }
 
@@ -89,7 +88,7 @@ func (a *Atack) Brute() (pass string, err error) {
 	N := runtime.NumCPU()
 	log.Printf("Use %v CPU\n", N)
 
-	chOut := make(chan string, N*1e8)
+	chOut := make(chan string, N*1e7)
 	chIn := make(chan string, 1)
 
 	wg := sync.WaitGroup{}
@@ -120,6 +119,11 @@ func (a *Atack) Brute() (pass string, err error) {
 				return p, nil
 			} else {
 				s, _ := a.buildString(a.passN)
+
+				if len(chOut) == cap(chOut) {
+					for len(chOut) > 0 {
+					}
+				}
 				chOut <- s
 			}
 		}
@@ -130,6 +134,8 @@ func (a *Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan str
 	defer wg.Done()
 
 	for s := range chIn {
+		atomic.AddInt64(&a.count, 1)
+		a.pass = s
 		if a.atack.check(s) {
 			chOut <- s
 		}
@@ -139,13 +145,15 @@ func (a *Atack) bruteWorker(wg *sync.WaitGroup, chIn chan string, chOut chan str
 func (a *Atack) startStatusLogger(ctx context.Context) {
 	var t int
 	totalTime := 0 * time.Second
+	totalCount := int64(0)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
 			time.Sleep(time.Second)
-			log.Printf("Current pass %v, Speed %v op/sec, TotalCount %v, time %v", a.pass, a.count, a.count, totalTime)
+			totalCount = totalCount + a.count
+			log.Printf("Current pass %v, Speed %v op/sec, TotalCount %v, time %v", a.pass, a.count, totalCount, totalTime)
 			a.count = 0
 			t++
 			totalTime = totalTime + 1*time.Second
