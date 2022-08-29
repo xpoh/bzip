@@ -1,6 +1,6 @@
 module github.com/xpoh/bzip
 
-go 1.19
+go 1.16
 
 require github.com/yeka/zip v0.0.0-20180914125537-d046722c6feb
 

@@ -89,7 +89,7 @@ func (a *Atack) Brute() (pass string, err error) {
 	N := runtime.NumCPU()
 	log.Printf("Use %v CPU\n", N)
 
-	chOut := make(chan string, N)
+	chOut := make(chan string, N*1e8)
 	chIn := make(chan string, 1)
 
 	wg := sync.WaitGroup{}

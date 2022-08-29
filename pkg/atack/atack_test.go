@@ -168,3 +168,16 @@ func TestAtack_brute(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkAtack_GenNextPass(t *testing.B) {
+	t.StopTimer()
+	a := newMockAtacker("abc")
+	at := NewAtack(a, 15, []rune("abcdefgh"))
+	t.StartTimer()
+	for n := 0; n < t.N; n++ {
+		err := at.GenNextPass(0)
+		if err != nil {
+			panic(err)
+		}
+	}
+}
