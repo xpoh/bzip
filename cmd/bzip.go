@@ -6,7 +6,7 @@ import (
 	"github.com/xpoh/bzip/pkg/atack"
 )
 
-const version = "1.0.0"
+const version = "1.0.1"
 
 func PrintUsage() {
 	fmt.Println("Usage:")
