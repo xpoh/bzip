@@ -35,9 +35,6 @@ func NewAtack(atack Atacker, maxLength int, chars []rune) *Atack {
 	return a
 }
 
-/*
-NewAtack is a constructor for Atack type
-*/
 func (a *Atack) GenNextPass(idx int) error {
 
 	lc := len(a.chars) - 1
